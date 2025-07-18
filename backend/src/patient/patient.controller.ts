@@ -32,7 +32,7 @@ import {
 import { PatientService } from './patient.service';
 import { PatientEntity } from './patient.entity';
 
-@Controller('patients')
+@Controller('patient')
 export class PatientController {
   constructor(private readonly patientService: PatientService) {}
 
