@@ -1,14 +1,16 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { patientService, type Patient } from '../services/patientService';
+import { patientService, type Patient, type UpdatePatientData } from '../services/patientService';
 
 export default function Patient() {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
+  const [editingPatient, setEditingPatient] = useState<UpdatePatientData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     const fetchPatients = async () => {
@@ -33,12 +35,47 @@ export default function Patient() {
       setError(null);
       const patient = await patientService.getPatientById(patientId);
       setSelectedPatient(patient);
+      setEditingPatient({
+        name: patient.name,
+        dob: patient.dob
+      });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch patient details');
     } finally {
       setDetailLoading(false);
     }
   };
+
+  const handleSave = async () => {
+    if (!selectedPatient || !editingPatient) return;
+
+    try {
+      setSaving(true);
+      setError(null);
+      
+      const updatedPatient = await patientService.updatePatient(selectedPatient.id, editingPatient);
+      
+      // Update the selected patient with new data
+      setSelectedPatient(updatedPatient);
+      
+      // Update the patient in the list
+      setPatients(prevPatients => 
+        prevPatients.map(patient => 
+          patient.id === selectedPatient.id ? updatedPatient : patient
+        )
+      );
+      
+      // Show success message (you could add a toast notification here)
+      alert('Patient updated successfully!');
+      
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update patient');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString();
@@ -111,7 +148,7 @@ export default function Patient() {
           </div>
 
           {/* Patient Detail Section */}
-          {selectedPatient && (
+          {selectedPatient && editingPatient && (
             <div className="bg-white shadow rounded-lg overflow-hidden">
               <div className="px-6 py-4 bg-blue-50 border-b">
                 <h2 className="text-lg font-semibold text-blue-800">Patient Details</h2>
@@ -131,19 +168,37 @@ export default function Patient() {
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
-                        <p className="text-lg text-gray-900">{selectedPatient.name}</p>
+                        <input
+                          type="text"
+                          value={editingPatient.name}
+                          onChange={(e) => setEditingPatient(prev => prev ? {...prev, name: e.target.value} : null)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        />
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Date of Birth</label>
-                        <p className="text-lg text-gray-900">{formatDate(selectedPatient.dob)}</p>
+                        <input
+                          type="date"
+                          value={editingPatient.dob}
+                          onChange={(e) => setEditingPatient(prev => prev ? {...prev, dob: e.target.value} : null)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        />
                       </div>
                     </div>
-                    <div className="mt-6 pt-4 border-t border-gray-200">
+                    <div className="mt-6 pt-4 border-t border-gray-200 flex gap-2">
+                      <button 
+                        onClick={handleSave}
+                        disabled={saving}
+                        className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                      >
+                        {saving ? 'Saving...' : 'Save Changes'}
+                      </button>
                       <button 
                         onClick={() => setSelectedPatient(null)}
-                        className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors"
+                        disabled={saving}
+                        className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
                       >
-                        Close Details
+                        Close
                       </button>
                     </div>
                   </div>
