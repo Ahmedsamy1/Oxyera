@@ -44,6 +44,22 @@ export const assignmentService = {
     }
   },
 
+  async getAssignmentsByPatientId(patientId: number): Promise<Assignment[]> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/assignment/patient/${patientId}`);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error(`Error fetching assignments for patient ${patientId}:`, error);
+      throw error;
+    }
+  },
+
   async getAssignmentById(id: number): Promise<Assignment> {
     try {
       const response = await fetch(`${API_BASE_URL}/assignment/${id}`);

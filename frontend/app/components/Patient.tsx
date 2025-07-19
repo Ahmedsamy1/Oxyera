@@ -2,16 +2,19 @@
 
 import { useState, useEffect } from 'react';
 import { patientService, type Patient, type UpdatePatientData, type CreatePatientData } from '../services/patientService';
+import { assignmentService, type Assignment } from '../services/assignmentService';
 
 export default function Patient() {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const [editingPatient, setEditingPatient] = useState<UpdatePatientData | null>(null);
+  const [patientAssignments, setPatientAssignments] = useState<Assignment[]>([]);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [newPatient, setNewPatient] = useState<CreatePatientData>({ name: '', dob: '' });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
+  const [assignmentsLoading, setAssignmentsLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [creating, setCreating] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -43,6 +46,18 @@ export default function Patient() {
         name: patient.name,
         dob: patient.dob
       });
+
+      // Fetch patient assignments
+      try {
+        setAssignmentsLoading(true);
+        const assignments = await assignmentService.getAssignmentsByPatientId(patientId);
+        setPatientAssignments(assignments);
+      } catch (err) {
+        console.error('Failed to fetch patient assignments:', err);
+        setPatientAssignments([]);
+      } finally {
+        setAssignmentsLoading(false);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch patient details');
     } finally {
@@ -99,6 +114,7 @@ export default function Patient() {
       // Close the detail view
       setSelectedPatient(null);
       setEditingPatient(null);
+      setPatientAssignments([]);
       
       // Show success message
       alert('Patient deleted successfully!');
@@ -281,7 +297,7 @@ export default function Patient() {
                     <span className="ml-2 text-gray-600">Loading patient details...</span>
                   </div>
                 ) : (
-                  <div className="space-y-4">
+                  <div className="space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Patient ID</label>
@@ -306,6 +322,47 @@ export default function Patient() {
                         />
                       </div>
                     </div>
+
+                    {/* Patient Assignments Section */}
+                    <div className="border-t border-gray-200 pt-6">
+                      <h3 className="text-lg font-semibold text-gray-800 mb-4">Patient Assignments</h3>
+                      {assignmentsLoading ? (
+                        <div className="flex items-center justify-center p-4">
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                          <span className="ml-2 text-gray-600">Loading assignments...</span>
+                        </div>
+                      ) : patientAssignments.length === 0 ? (
+                        <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                          <p className="text-gray-500">No assignments found for this patient.</p>
+                        </div>
+                      ) : (
+                        <div className="space-y-3">
+                          {patientAssignments.map((assignment) => (
+                            <div key={assignment.id} className="border border-gray-200 rounded-lg p-4">
+                              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div>
+                                  <h4 className="text-sm font-medium text-gray-700">Assignment ID</h4>
+                                  <p className="text-lg font-semibold text-gray-900">#{assignment.id}</p>
+                                </div>
+                                <div>
+                                  <h4 className="text-sm font-medium text-gray-700">Medication ID</h4>
+                                  <p className="text-lg font-semibold text-gray-900">#{assignment.medicationId}</p>
+                                </div>
+                                <div>
+                                  <h4 className="text-sm font-medium text-gray-700">Start Date</h4>
+                                  <p className="text-lg font-semibold text-gray-900">{formatDate(assignment.startDate)}</p>
+                                </div>
+                                <div>
+                                  <h4 className="text-sm font-medium text-gray-700">Duration</h4>
+                                  <p className="text-lg font-semibold text-gray-900">{assignment.numberOfDays} days</p>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
                     <div className="mt-6 pt-4 border-t border-gray-200 flex gap-2">
                       <button 
                         onClick={handleSave}
