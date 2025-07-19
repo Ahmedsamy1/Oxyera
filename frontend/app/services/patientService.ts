@@ -9,6 +9,11 @@ export interface UpdatePatientData {
   dob: string;
 }
 
+export interface CreatePatientData {
+  name: string;
+  dob: string;
+}
+
 const API_BASE_URL = 'http://localhost:8080';
 
 export const patientService = {
@@ -40,6 +45,28 @@ export const patientService = {
       return data;
     } catch (error) {
       console.error(`Error fetching patient ${id}:`, error);
+      throw error;
+    }
+  },
+
+  async createPatient(patientData: CreatePatientData): Promise<Patient> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/patient`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(patientData),
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Error creating patient:', error);
       throw error;
     }
   },

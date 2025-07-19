@@ -1,16 +1,19 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { patientService, type Patient, type UpdatePatientData } from '../services/patientService';
+import { patientService, type Patient, type UpdatePatientData, type CreatePatientData } from '../services/patientService';
 
 export default function Patient() {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const [editingPatient, setEditingPatient] = useState<UpdatePatientData | null>(null);
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [newPatient, setNewPatient] = useState<CreatePatientData>({ name: '', dob: '' });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [creating, setCreating] = useState(false);
 
   useEffect(() => {
     const fetchPatients = async () => {
@@ -75,7 +78,34 @@ export default function Patient() {
     }
   };
 
+  const handleCreatePatient = async () => {
+    if (!newPatient.name || !newPatient.dob) {
+      alert('Please fill in all fields');
+      return;
+    }
 
+    try {
+      setCreating(true);
+      setError(null);
+      
+      const createdPatient = await patientService.createPatient(newPatient);
+      
+      // Add the new patient to the list
+      setPatients(prevPatients => [...prevPatients, createdPatient]);
+      
+      // Reset form
+      setNewPatient({ name: '', dob: '' });
+      setShowCreateForm(false);
+      
+      // Show success message
+      alert('Patient created successfully!');
+      
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to create patient');
+    } finally {
+      setCreating(false);
+    }
+  };
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString();
@@ -113,7 +143,66 @@ export default function Patient() {
 
   return (
     <div className="p-8">
-      <h1 className="text-2xl font-bold mb-4">Patient Management</h1>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold">Patient Management</h1>
+        <button
+          onClick={() => setShowCreateForm(!showCreateForm)}
+          className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors cursor-pointer"
+        >
+          {showCreateForm ? 'Cancel' : 'Add New Patient'}
+        </button>
+      </div>
+      
+      {/* Create Patient Form */}
+      {showCreateForm && (
+        <div className="bg-white shadow rounded-lg overflow-hidden mb-6">
+          <div className="px-6 py-4 bg-green-50 border-b">
+            <h2 className="text-lg font-semibold text-green-800">Create New Patient</h2>
+          </div>
+          <div className="p-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                <input
+                  type="text"
+                  value={newPatient.name}
+                  onChange={(e) => setNewPatient(prev => ({ ...prev, name: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  placeholder="Enter patient name"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Date of Birth</label>
+                <input
+                  type="date"
+                  value={newPatient.dob}
+                  onChange={(e) => setNewPatient(prev => ({ ...prev, dob: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                />
+              </div>
+            </div>
+            <div className="mt-4 flex gap-2">
+              <button
+                onClick={handleCreatePatient}
+                disabled={creating}
+                className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
+              >
+                {creating ? 'Creating...' : 'Create Patient'}
+              </button>
+              <button
+                onClick={() => {
+                  setShowCreateForm(false);
+                  setNewPatient({ name: '', dob: '' });
+                }}
+                disabled={creating}
+                className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       
       {patients.length === 0 ? (
         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
