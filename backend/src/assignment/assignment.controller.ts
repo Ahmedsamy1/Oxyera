@@ -37,6 +37,11 @@ export class AssignmentController {
     });
   }
 
+  @Get('patient/:patientId')
+  async findByPatientId(@Param('patientId', ParseIntPipe) patientId: number): Promise<AssignmentEntity[]> {
+    return this.assignmentService.findByPatientId(patientId);
+  }
+
   @Get(':id')
   async findOne(@Param('id', ParseIntPipe) id: number): Promise<AssignmentEntity> {
     const assignment = await this.assignmentService.findOne(id);

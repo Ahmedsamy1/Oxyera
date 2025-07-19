@@ -23,6 +23,10 @@ export class AssignmentService {
     return this.assignmentRepo.findOne({ where: { id } });
   }
 
+  async findByPatientId(patientId: number): Promise<AssignmentEntity[]> {
+    return this.assignmentRepo.find({ where: { patientId } });
+  }
+
   async update(id: number, updates: Partial<Omit<AssignmentEntity, 'id'>>): Promise<AssignmentEntity | null> {
     const existing = await this.assignmentRepo.findOne({ where: { id } });
     if (!existing) return null;
