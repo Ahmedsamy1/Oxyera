@@ -41,21 +41,11 @@ export class AssignmentController {
 
   @Get(':id/remaining-days')
   async getRemainingDaysById(@Param('id', ParseIntPipe) id: number): Promise<{ assignment: AssignmentEntity; remainingDays: number }> {
-    const assignment = await this.assignmentService.findOne(id);
-    if (!assignment) {
+    const result = await this.assignmentService.getRemainingDaysById(id);
+    if (!result) {
       throw new NotFoundException('Assignment not found');
     }
-
-    const today = new Date();
-    const endDate = new Date(assignment.startDate);
-    endDate.setDate(endDate.getDate() + assignment.numberOfDays);
-    const diffTime = endDate.getTime() - today.getTime();
-    const remainingDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-    return {
-      assignment,
-      remainingDays: remainingDays > 0 ? remainingDays : 0,
-    };
+    return result;
   }
 
   @Get('patient/:patientId')

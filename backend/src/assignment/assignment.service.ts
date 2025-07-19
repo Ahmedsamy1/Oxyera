@@ -8,7 +8,7 @@ export class AssignmentService {
   constructor(
     @InjectRepository(AssignmentEntity)
     private assignmentRepo: Repository<AssignmentEntity>,
-  ) {}
+  ) { }
 
   async create(patientId: number, medicationId: number, startDate: Date, numberOfDays: number): Promise<AssignmentEntity> {
     const assignment = this.assignmentRepo.create({ patientId, medicationId, startDate, numberOfDays });
@@ -38,5 +38,23 @@ export class AssignmentService {
   async remove(id: number): Promise<boolean> {
     const result = await this.assignmentRepo.delete(id);
     return (result.affected ?? 0) > 0;
+  }
+
+  async getRemainingDaysById(id: number): Promise<{ assignment: AssignmentEntity; remainingDays: number } | null> {
+    const assignment = await this.findOne(id);
+    if (!assignment) {
+      return null;
+    }
+
+    const today = new Date();
+    const endDate = new Date(assignment.startDate);
+    endDate.setDate(endDate.getDate() + assignment.numberOfDays);
+    const diffTime = endDate.getTime() - today.getTime();
+    const remainingDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    return {
+      assignment,
+      remainingDays: remainingDays > 0 ? remainingDays : 0,
+    };
   }
 } 
