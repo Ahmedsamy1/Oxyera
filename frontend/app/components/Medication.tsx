@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { medicationService, type Medication, type UpdateMedicationData, type CreateMedicationData } from '../services/medicationService';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 export default function Medication() {
   const [medications, setMedications] = useState<Medication[]>([]);
@@ -71,7 +73,7 @@ export default function Medication() {
       );
       
       // Show success message (you could add a toast notification here)
-      alert('Medication updated successfully!');
+      toast.success('Medication updated successfully!');
       
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update medication');
@@ -102,7 +104,7 @@ export default function Medication() {
       setEditingMedication(null);
       
       // Show success message
-      alert('Medication deleted successfully!');
+      toast.success('Medication deleted successfully!');
       
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to delete medication');
@@ -113,7 +115,7 @@ export default function Medication() {
 
   const handleCreateMedication = async () => {
     if (!newMedication.name || !newMedication.dosage || !newMedication.frequency) {
-      alert('Please fill in all fields');
+      toast.error('Please fill in all fields');
       return;
     }
 
@@ -131,7 +133,7 @@ export default function Medication() {
       setShowCreateForm(false);
       
       // Show success message
-      alert('Medication created successfully!');
+      toast.success('Medication created successfully!');
       
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create medication');
@@ -355,6 +357,7 @@ export default function Medication() {
           )}
         </div>
       )}
+      <ToastContainer aria-label="Toast notifications" />
     </div>
   );
 } 

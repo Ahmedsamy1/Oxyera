@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react';
 import { patientService, type Patient, type UpdatePatientData, type CreatePatientData } from '../services/patientService';
 import { assignmentService, type Assignment } from '../services/assignmentService';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 export default function Patient() {
   const [patients, setPatients] = useState<Patient[]>([]);
@@ -85,7 +87,7 @@ export default function Patient() {
       );
       
       // Show success message (you could add a toast notification here)
-      alert('Patient updated successfully!');
+      toast.success('Patient updated successfully!');
       
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update patient');
@@ -117,7 +119,7 @@ export default function Patient() {
       setPatientAssignments([]);
       
       // Show success message
-      alert('Patient deleted successfully!');
+      toast.success('Patient deleted successfully!');
       
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to delete patient');
@@ -128,7 +130,7 @@ export default function Patient() {
 
   const handleCreatePatient = async () => {
     if (!newPatient.name || !newPatient.dob) {
-      alert('Please fill in all fields');
+      toast.error('Please fill in all fields');
       return;
     }
 
@@ -146,7 +148,7 @@ export default function Patient() {
       setShowCreateForm(false);
       
       // Show success message
-      alert('Patient created successfully!');
+      toast.success('Patient created successfully!');
       
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create patient');
@@ -393,6 +395,7 @@ export default function Patient() {
           )}
         </div>
       )}
+      <ToastContainer aria-label="Toast notifications" />
     </div>
   );
 } 

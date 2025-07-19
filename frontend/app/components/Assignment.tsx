@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { assignmentService, type Assignment, type UpdateAssignmentData, type CreateAssignmentData, type RemainingDaysData } from '../services/assignmentService';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 export default function Assignment() {
   const [assignments, setAssignments] = useState<Assignment[]>([]);
@@ -125,8 +127,7 @@ export default function Assignment() {
         }
       }
       
-      // Show success message (you could add a toast notification here)
-      alert('Assignment updated successfully!');
+      toast.success('Assignment updated successfully!');
       
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update assignment');
@@ -167,8 +168,7 @@ export default function Assignment() {
         }
       }
       
-      // Show success message
-      alert('Assignment deleted successfully!');
+      toast.success('Assignment deleted successfully!');
       
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to delete assignment');
@@ -179,7 +179,7 @@ export default function Assignment() {
 
   const handleCreateAssignment = async () => {
     if (!newAssignment.patientId || !newAssignment.medicationId || !newAssignment.startDate || !newAssignment.numberOfDays) {
-      alert('Please fill in all fields');
+      toast.error('Please fill in all fields');
       return;
     }
 
@@ -191,7 +191,7 @@ export default function Assignment() {
       
       // If the response contains an error, alert it and do not proceed
       if ('error' in createdAssignment) {
-        alert(createdAssignment.error);
+        toast.error(createdAssignment.error);
         return;
       }
       
@@ -212,8 +212,7 @@ export default function Assignment() {
         }
       }
       
-      // Show success message
-      alert('Assignment created successfully!');
+      toast.success('Assignment created successfully!');
       
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create assignment');
@@ -542,6 +541,7 @@ export default function Assignment() {
           )}
         </div>
       )}
+      <ToastContainer aria-label="Toast notifications" />
     </div>
   );
 } 
