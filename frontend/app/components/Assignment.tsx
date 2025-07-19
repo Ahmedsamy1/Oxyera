@@ -7,6 +7,7 @@ export default function Assignment() {
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [selectedAssignment, setSelectedAssignment] = useState<Assignment | null>(null);
   const [editingAssignment, setEditingAssignment] = useState<UpdateAssignmentData | null>(null);
+  const [assignmentRemainingDays, setAssignmentRemainingDays] = useState<RemainingDaysData | null>(null);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [showRemainingDays, setShowRemainingDays] = useState(false);
   const [remainingDaysData, setRemainingDaysData] = useState<RemainingDaysData[]>([]);
@@ -19,10 +20,11 @@ export default function Assignment() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
+  const [remainingDaysLoading, setRemainingDaysLoading] = useState(false);
+  const [assignmentRemainingDaysLoading, setAssignmentRemainingDaysLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [creating, setCreating] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  const [remainingDaysLoading, setRemainingDaysLoading] = useState(false);
 
   useEffect(() => {
     const fetchAssignments = async () => {
@@ -53,6 +55,18 @@ export default function Assignment() {
         startDate: assignment.startDate,
         numberOfDays: assignment.numberOfDays
       });
+
+      // Fetch remaining days for this specific assignment
+      try {
+        setAssignmentRemainingDaysLoading(true);
+        const remainingDaysData = await assignmentService.getRemainingDaysById(assignmentId);
+        setAssignmentRemainingDays(remainingDaysData);
+      } catch (err) {
+        console.error('Failed to fetch assignment remaining days:', err);
+        setAssignmentRemainingDays(null);
+      } finally {
+        setAssignmentRemainingDaysLoading(false);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch assignment details');
     } finally {
@@ -92,6 +106,14 @@ export default function Assignment() {
           assignment.id === selectedAssignment.id ? updatedAssignment : assignment
         )
       );
+      
+      // Refresh remaining days data for this assignment
+      try {
+        const remainingDaysData = await assignmentService.getRemainingDaysById(selectedAssignment.id);
+        setAssignmentRemainingDays(remainingDaysData);
+      } catch (err) {
+        console.error('Failed to refresh assignment remaining days:', err);
+      }
       
       // Refresh remaining days data if it's currently shown
       if (showRemainingDays) {
@@ -133,6 +155,7 @@ export default function Assignment() {
       // Close the detail view
       setSelectedAssignment(null);
       setEditingAssignment(null);
+      setAssignmentRemainingDays(null);
       
       // Refresh remaining days data if it's currently shown
       if (showRemainingDays) {
@@ -411,7 +434,7 @@ export default function Assignment() {
                     <span className="ml-2 text-gray-600">Loading assignment details...</span>
                   </div>
                 ) : (
-                  <div className="space-y-4">
+                  <div className="space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Assignment ID</label>
@@ -454,6 +477,35 @@ export default function Assignment() {
                         />
                       </div>
                     </div>
+
+                    {/* Assignment Remaining Days Section */}
+                    <div className="border-t border-gray-200 pt-6">
+                      <h3 className="text-lg font-semibold text-gray-800 mb-4">Remaining Days</h3>
+                      {assignmentRemainingDaysLoading ? (
+                        <div className="flex items-center justify-center p-4">
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                          <span className="ml-2 text-gray-600">Loading remaining days...</span>
+                        </div>
+                      ) : assignmentRemainingDays ? (
+                        <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="text-sm text-green-600 font-medium">Remaining Days</p>
+                              <p className="text-3xl font-bold text-green-800">{assignmentRemainingDays.remainingDays}</p>
+                            </div>
+                            <div className="text-right">
+                              <p className="text-sm text-green-600">Total Days</p>
+                              <p className="text-lg font-semibold text-green-800">{assignmentRemainingDays.assignment.numberOfDays}</p>
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                          <p className="text-gray-500">Unable to load remaining days data.</p>
+                        </div>
+                      )}
+                    </div>
+
                     <div className="mt-6 pt-4 border-t border-gray-200 flex gap-2">
                       <button 
                         onClick={handleSave}

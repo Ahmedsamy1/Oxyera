@@ -76,6 +76,22 @@ export const assignmentService = {
     }
   },
 
+  async getRemainingDaysById(id: number): Promise<RemainingDaysData> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/assignment/${id}/remaining-days`);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error(`Error fetching remaining days for assignment ${id}:`, error);
+      throw error;
+    }
+  },
+
   async getRemainingDays(): Promise<RemainingDaysData[]> {
     try {
       const response = await fetch(`${API_BASE_URL}/assignment/remaining-days`);
