@@ -2,12 +2,15 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { PatientEntity } from './patient.entity';
+import { AssignmentEntity } from '../assignment/assignment.entity';
 
 @Injectable()
 export class PatientService {
   constructor(
     @InjectRepository(PatientEntity)
     private patientRepo: Repository<PatientEntity>,
+    @InjectRepository(AssignmentEntity)
+    private assignmentRepo: Repository<AssignmentEntity>,
   ) {}
 
   async create(name: string, dob: Date): Promise<PatientEntity> {
@@ -32,6 +35,8 @@ export class PatientService {
   }
 
   async remove(id: number): Promise<boolean> {
+    // Delete all assignments for this patient first
+    await this.assignmentRepo.delete({ patientId: id });
     const result = await this.patientRepo.delete(id);
     return (result.affected ?? 0) > 0;
   }
