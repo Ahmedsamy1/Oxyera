@@ -37,6 +37,25 @@ export class AssignmentController {
     });
   }
 
+  @Get(':id/remaining-days')
+  async getRemainingDaysById(@Param('id', ParseIntPipe) id: number): Promise<{ assignment: AssignmentEntity; remainingDays: number }> {
+    const assignment = await this.assignmentService.findOne(id);
+    if (!assignment) {
+      throw new NotFoundException('Assignment not found');
+    }
+
+    const today = new Date();
+    const endDate = new Date(assignment.startDate);
+    endDate.setDate(endDate.getDate() + assignment.numberOfDays);
+    const diffTime = endDate.getTime() - today.getTime();
+    const remainingDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    return {
+      assignment,
+      remainingDays: remainingDays > 0 ? remainingDays : 0,
+    };
+  }
+
   @Get('patient/:patientId')
   async findByPatientId(@Param('patientId', ParseIntPipe) patientId: number): Promise<AssignmentEntity[]> {
     return this.assignmentService.findByPatientId(patientId);
