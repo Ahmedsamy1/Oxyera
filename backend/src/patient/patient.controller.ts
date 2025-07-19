@@ -1,23 +1,3 @@
-// import { Controller, Get, Post, Body } from '@nestjs/common';
-// import { PatientService } from './patient.service';
-
-// @Controller('patient')
-// export class PatientController {
-//   constructor(private readonly patientSerice: PatientService) {}
-
-//   @Get()
-//   findAll() {
-//     console.log("reached");
-//     return 'Working';
-//     // return this.patientSerice.findAll();
-//   }
-
-//   @Post()
-//   create(@Body('name') name: string) {
-//     return this.patientSerice.create(name);
-//   }
-// }
-
 import {
   Controller,
   Get,
@@ -31,10 +11,12 @@ import {
 } from '@nestjs/common';
 import { PatientService } from './patient.service';
 import { PatientEntity } from './patient.entity';
+import { CreatePatientDto } from './dto/create-patient.dto';
+import { UpdatePatientDto } from './dto/update-patient.dto';
 
 @Controller('patient')
 export class PatientController {
-  constructor(private readonly patientService: PatientService) {}
+  constructor(private readonly patientService: PatientService) { }
 
   @Get()
   async findAll(): Promise<PatientEntity[]> {
@@ -51,21 +33,22 @@ export class PatientController {
   }
 
   @Post()
-  async create(@Body() body: { name: string; dob: string }): Promise<PatientEntity> {
-    return this.patientService.create(body.name, new Date(body.dob));
+  async create(@Body() createPatientDto: CreatePatientDto): Promise<PatientEntity> {
+    return this.patientService.create(
+      createPatientDto.name,
+      new Date(createPatientDto.dob)
+    );
   }
 
   @Put(':id')
   async update(
     @Param('id', ParseIntPipe) id: number,
-    @Body() body: Partial<{ name: string; dob: string }>
+    @Body() updatePatientDto: UpdatePatientDto
   ): Promise<PatientEntity> {
-    const updates = {
-      ...(body.name && { name: body.name }),
-      ...(body.dob && { dob: new Date(body.dob) }),
-    };
-
-    const updated = await this.patientService.update(id, updates);
+    const updated = await this.patientService.update(id, {
+      name: updatePatientDto.name,
+      dob: new Date(updatePatientDto.dob),
+    });
     if (!updated) {
       throw new NotFoundException('Patient not found');
     }

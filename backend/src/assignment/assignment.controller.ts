@@ -11,6 +11,8 @@ import {
 } from '@nestjs/common';
 import { AssignmentService } from './assignment.service';
 import { AssignmentEntity } from './assignment.entity';
+import { CreateAssignmentDto } from './dto/create-assignment.dto';
+import { UpdateAssignmentDto } from './dto/update-assignment.dto';
 
 @Controller('assignment')
 export class AssignmentController {
@@ -71,25 +73,25 @@ export class AssignmentController {
   }
 
   @Post()
-  async create(@Body() body: { patientId: number; medicationId: number; startDate: string; numberOfDays: number }): Promise<AssignmentEntity> {
+  async create(@Body() createAssignmentDto: CreateAssignmentDto): Promise<AssignmentEntity> {
     return this.assignmentService.create(
-      body.patientId,
-      body.medicationId,
-      new Date(body.startDate),
-      body.numberOfDays
+      createAssignmentDto.patientId,
+      createAssignmentDto.medicationId,
+      new Date(createAssignmentDto.startDate),
+      createAssignmentDto.numberOfDays
     );
   }
 
   @Put(':id')
   async update(
     @Param('id', ParseIntPipe) id: number,
-    @Body() body: Partial<{ patientId: number; medicationId: number; startDate: string; numberOfDays: number }>
+    @Body() updateAssignmentDto: UpdateAssignmentDto
   ): Promise<AssignmentEntity> {
     const updates = {
-      ...(body.patientId !== undefined && { patientId: body.patientId }),
-      ...(body.medicationId !== undefined && { medicationId: body.medicationId }),
-      ...(body.startDate && { startDate: new Date(body.startDate) }),
-      ...(body.numberOfDays !== undefined && { numberOfDays: body.numberOfDays }),
+      patientId: updateAssignmentDto.patientId,
+      medicationId: updateAssignmentDto.medicationId,
+      startDate: new Date(updateAssignmentDto.startDate),
+      numberOfDays: updateAssignmentDto.numberOfDays,
     };
 
     const updated = await this.assignmentService.update(id, updates);

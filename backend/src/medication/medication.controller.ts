@@ -11,10 +11,12 @@ import {
 } from '@nestjs/common';
 import { MedicationService } from './medication.service';
 import { MedicationEntity } from './medication.entity';
+import { CreateMedicationDto } from './dto/create-medication.dto';
+import { UpdateMedicationDto } from './dto/update-medication.dto';
 
 @Controller('medication')
 export class MedicationController {
-  constructor(private readonly medicationService: MedicationService) {}
+  constructor(private readonly medicationService: MedicationService) { }
 
   @Get()
   async findAll(): Promise<MedicationEntity[]> {
@@ -31,22 +33,24 @@ export class MedicationController {
   }
 
   @Post()
-  async create(@Body() body: { name: string; dosage: string; frequency: string }): Promise<MedicationEntity> {
-    return this.medicationService.create(body.name, body.dosage, body.frequency);
+  async create(@Body() createMedicationDto: CreateMedicationDto): Promise<MedicationEntity> {
+    return this.medicationService.create(
+      createMedicationDto.name,
+      createMedicationDto.dosage,
+      createMedicationDto.frequency
+    );
   }
 
   @Put(':id')
   async update(
     @Param('id', ParseIntPipe) id: number,
-    @Body() body: Partial<{ name: string; dosage: string; frequency: string }>
+    @Body() updateMedicationDto: UpdateMedicationDto
   ): Promise<MedicationEntity> {
-    const updates = {
-      ...(body.name && { name: body.name }),
-      ...(body.dosage && { dosage: body.dosage }),
-      ...(body.frequency && { frequency: body.frequency }),
-    };
-
-    const updated = await this.medicationService.update(id, updates);
+    const updated = await this.medicationService.update(id, {
+      name: updateMedicationDto.name,
+      dosage: updateMedicationDto.dosage,
+      frequency: updateMedicationDto.frequency,
+    });
     if (!updated) {
       throw new NotFoundException('Medication not found');
     }
