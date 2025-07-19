@@ -108,7 +108,7 @@ export const assignmentService = {
     }
   },
 
-  async createAssignment(assignmentData: CreateAssignmentData): Promise<Assignment> {
+  async createAssignment(assignmentData: CreateAssignmentData): Promise<Assignment | { error: string }> {
     try {
       const response = await fetch(`${API_BASE_URL}/assignment`, {
         method: 'POST',
@@ -118,11 +118,12 @@ export const assignmentService = {
         body: JSON.stringify(assignmentData),
       });
       
+      const data = await response.json();
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        // If the response is not ok, return the error field from the response JSON or a fallback
+        return { error: data.error || `HTTP error! status: ${response.status}` };
       }
       
-      const data = await response.json();
       return data;
     } catch (error) {
       console.error('Error creating assignment:', error);

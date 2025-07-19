@@ -2,15 +2,29 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { AssignmentEntity } from './assignment.entity';
+import { PatientService } from '../patient/patient.service';
+import { MedicationService } from '../medication/medication.service';
 
 @Injectable()
 export class AssignmentService {
   constructor(
     @InjectRepository(AssignmentEntity)
     private assignmentRepo: Repository<AssignmentEntity>,
+    private patientService: PatientService,
+    private medicationService: MedicationService,
   ) { }
 
-  async create(patientId: number, medicationId: number, startDate: Date, numberOfDays: number): Promise<AssignmentEntity> {
+  async create(patientId: number, medicationId: number, startDate: Date, numberOfDays: number): Promise<AssignmentEntity | { error: string }> {
+    // Check if patient exists
+    const patient = await this.patientService.findOne(patientId);
+    if (!patient) {
+      return { error: `Patient with id ${patientId} does not exist` };
+    }
+    // Check if medication exists
+    const medication = await this.medicationService.findOne(medicationId);
+    if (!medication) {
+      return { error: `Medication with id ${medicationId} does not exist` };
+    }
     const assignment = this.assignmentRepo.create({ patientId, medicationId, startDate, numberOfDays });
     return this.assignmentRepo.save(assignment);
   }

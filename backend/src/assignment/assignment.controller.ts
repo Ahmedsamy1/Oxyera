@@ -63,13 +63,17 @@ export class AssignmentController {
   }
 
   @Post()
-  async create(@Body() createAssignmentDto: CreateAssignmentDto): Promise<AssignmentEntity> {
-    return this.assignmentService.create(
+  async create(@Body() createAssignmentDto: CreateAssignmentDto): Promise<any> {
+    const result = await this.assignmentService.create(
       createAssignmentDto.patientId,
       createAssignmentDto.medicationId,
       new Date(createAssignmentDto.startDate),
       createAssignmentDto.numberOfDays
     );
+    if ('error' in result) {
+      return { error: result.error };
+    }
+    return result;
   }
 
   @Put(':id')

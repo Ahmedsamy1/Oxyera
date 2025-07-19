@@ -189,6 +189,12 @@ export default function Assignment() {
       
       const createdAssignment = await assignmentService.createAssignment(newAssignment);
       
+      // If the response contains an error, alert it and do not proceed
+      if ('error' in createdAssignment) {
+        alert(createdAssignment.error);
+        return;
+      }
+      
       // Add the new assignment to the list
       setAssignments(prevAssignments => [...prevAssignments, createdAssignment]);
       
