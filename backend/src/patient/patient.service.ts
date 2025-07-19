@@ -5,54 +5,34 @@ import { PatientEntity } from './patient.entity';
 
 @Injectable()
 export class PatientService {
-  private patients: Map<number, PatientEntity> = new Map();
-  private currentId = 1;
+  constructor(
+    @InjectRepository(PatientEntity)
+    private patientRepo: Repository<PatientEntity>,
+  ) {}
 
-  create(name: string, dob: Date): PatientEntity {
-    const patient: PatientEntity = {
-      id: this.currentId++,
-      name,
-      dob,
-    };
-    this.patients.set(patient.id, patient);
-    return patient;
+  async create(name: string, dob: Date): Promise<PatientEntity> {
+    const patient = this.patientRepo.create({ name, dob });
+    return this.patientRepo.save(patient);
   }
 
-  findAll(): PatientEntity[] {
-    return Array.from(this.patients.values());
+  async findAll(): Promise<PatientEntity[]> {
+    return this.patientRepo.find();
   }
 
-  findOne(id: number): PatientEntity | undefined {
-    return this.patients.get(id);
+  async findOne(id: number): Promise<PatientEntity | null> {
+    return this.patientRepo.findOne({ where: { id } });
   }
 
-  update(id: number, updates: Partial<Omit<PatientEntity, 'id'>>): PatientEntity | null {
-    const existing = this.patients.get(id);
+  async update(id: number, updates: Partial<Omit<PatientEntity, 'id'>>): Promise<PatientEntity | null> {
+    const existing = await this.patientRepo.findOne({ where: { id } });
     if (!existing) return null;
 
-    const updated = { ...existing, ...updates };
-    this.patients.set(id, updated);
-    return updated;
+    Object.assign(existing, updates);
+    return this.patientRepo.save(existing);
   }
 
-  remove(id: number): boolean {
-    return this.patients.delete(id);
+  async remove(id: number): Promise<boolean> {
+    const result = await this.patientRepo.delete(id);
+    return (result.affected ?? 0) > 0;
   }
 }
-
-// @Injectable()
-// export class PatientService {
-//   constructor(
-//     @InjectRepository(PatientEntity)
-//     private patientRepo: Repository<PatientEntity>,
-//   ) {}
-
-//   async create(name: string): Promise<PatientEntity> {
-//     const entity = this.patientRepo.create({ name });
-//     return this.patientRepo.save(entity);
-//   }
-
-//   async findAll(): Promise<PatientEntity[]> {
-//     return this.patientRepo.find();
-//   }
-// }

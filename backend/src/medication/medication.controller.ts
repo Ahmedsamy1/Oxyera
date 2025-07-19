@@ -17,13 +17,13 @@ export class MedicationController {
   constructor(private readonly medicationService: MedicationService) {}
 
   @Get()
-  findAll(): MedicationEntity[] {
+  async findAll(): Promise<MedicationEntity[]> {
     return this.medicationService.findAll();
   }
 
   @Get(':id')
-  findOne(@Param('id', ParseIntPipe) id: number): MedicationEntity {
-    const medication = this.medicationService.findOne(id);
+  async findOne(@Param('id', ParseIntPipe) id: number): Promise<MedicationEntity> {
+    const medication = await this.medicationService.findOne(id);
     if (!medication) {
       throw new NotFoundException('Medication not found');
     }
@@ -31,22 +31,22 @@ export class MedicationController {
   }
 
   @Post()
-  create(@Body() body: { name: string; dosage: string; frequency: string }): MedicationEntity {
+  async create(@Body() body: { name: string; dosage: string; frequency: string }): Promise<MedicationEntity> {
     return this.medicationService.create(body.name, body.dosage, body.frequency);
   }
 
   @Put(':id')
-  update(
+  async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() body: Partial<{ name: string; dosage: string; frequency: string }>
-  ): MedicationEntity {
+  ): Promise<MedicationEntity> {
     const updates = {
       ...(body.name && { name: body.name }),
       ...(body.dosage && { dosage: body.dosage }),
       ...(body.frequency && { frequency: body.frequency }),
     };
 
-    const updated = this.medicationService.update(id, updates);
+    const updated = await this.medicationService.update(id, updates);
     if (!updated) {
       throw new NotFoundException('Medication not found');
     }
@@ -54,8 +54,8 @@ export class MedicationController {
   }
 
   @Delete(':id')
-  remove(@Param('id', ParseIntPipe) id: number): void {
-    const success = this.medicationService.remove(id);
+  async remove(@Param('id', ParseIntPipe) id: number): Promise<void> {
+    const success = await this.medicationService.remove(id);
     if (!success) {
       throw new NotFoundException('Medication not found');
     }

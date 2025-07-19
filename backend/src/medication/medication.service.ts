@@ -1,38 +1,38 @@
+import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { MedicationEntity } from './medication.entity';
 
+@Injectable()
 export class MedicationService {
-  private medications: Map<number, MedicationEntity> = new Map();
-  private currentId = 1;
+  constructor(
+    @InjectRepository(MedicationEntity)
+    private medicationRepo: Repository<MedicationEntity>,
+  ) {}
 
-  create(name: string, dosage: string, frequency: string): MedicationEntity {
-    const medication: MedicationEntity = {
-      id: this.currentId++,
-      name,
-      dosage,
-      frequency,
-    };
-    this.medications.set(medication.id, medication);
-    return medication;
+  async create(name: string, dosage: string, frequency: string): Promise<MedicationEntity> {
+    const medication = this.medicationRepo.create({ name, dosage, frequency });
+    return this.medicationRepo.save(medication);
   }
 
-  findAll(): MedicationEntity[] {
-    return Array.from(this.medications.values());
+  async findAll(): Promise<MedicationEntity[]> {
+    return this.medicationRepo.find();
   }
 
-  findOne(id: number): MedicationEntity | undefined {
-    return this.medications.get(id);
+  async findOne(id: number): Promise<MedicationEntity | null> {
+    return this.medicationRepo.findOne({ where: { id } });
   }
 
-  update(id: number, updates: Partial<Omit<MedicationEntity, 'id'>>): MedicationEntity | null {
-    const existing = this.medications.get(id);
+  async update(id: number, updates: Partial<Omit<MedicationEntity, 'id'>>): Promise<MedicationEntity | null> {
+    const existing = await this.medicationRepo.findOne({ where: { id } });
     if (!existing) return null;
 
-    const updated = { ...existing, ...updates };
-    this.medications.set(id, updated);
-    return updated;
+    Object.assign(existing, updates);
+    return this.medicationRepo.save(existing);
   }
 
-  remove(id: number): boolean {
-    return this.medications.delete(id);
+  async remove(id: number): Promise<boolean> {
+    const result = await this.medicationRepo.delete(id);
+    return (result.affected ?? 0) > 0;
   }
 } 

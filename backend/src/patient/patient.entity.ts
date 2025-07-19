@@ -1,32 +1,19 @@
-// import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
 
-// @Entity()
+@Entity()
 export class PatientEntity {
-  name: string;
-  dob: Date;
+  @PrimaryGeneratedColumn()
   id: number;
 
-  constructor(id: number, name: string, dob: Date) {
-    this.id = id;
-    this.name = name;
-    this.dob = dob;
+  @Column()
+  name: string;
+
+  @Column('date')
+  dob: Date;
+
+  constructor(id?: number, name?: string, dob?: Date) {
+    if (id) this.id = id;
+    if (name) this.name = name;
+    if (dob) this.dob = dob;
   }
-
-  // getAge(): number {
-  //   const today = new Date();
-  //   const birthDate = new Date(this.dob);
-  //   let age = today.getFullYear() - birthDate.getFullYear();
-  //   const m = today.getMonth() - birthDate.getMonth();
-
-  //   if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
-  //     age--;
-  //   }
-
-  //   return age;
-  //   // @PrimaryGeneratedColumn()
-  //   // id: number;
-
-  //   // @Column()
-  //   // name: string;
-  // }
 }
