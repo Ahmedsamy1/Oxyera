@@ -20,6 +20,11 @@ export interface CreateAssignmentData {
   numberOfDays: number;
 }
 
+export interface RemainingDaysData {
+  assignment: Assignment;
+  remainingDays: number;
+}
+
 const API_BASE_URL = 'http://localhost:8080';
 
 export const assignmentService = {
@@ -51,6 +56,22 @@ export const assignmentService = {
       return data;
     } catch (error) {
       console.error(`Error fetching assignment ${id}:`, error);
+      throw error;
+    }
+  },
+
+  async getRemainingDays(): Promise<RemainingDaysData[]> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/assignment/remaining-days`);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Error fetching remaining days:', error);
       throw error;
     }
   },

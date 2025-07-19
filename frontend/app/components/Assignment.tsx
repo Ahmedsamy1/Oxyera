@@ -1,13 +1,15 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { assignmentService, type Assignment, type UpdateAssignmentData, type CreateAssignmentData } from '../services/assignmentService';
+import { assignmentService, type Assignment, type UpdateAssignmentData, type CreateAssignmentData, type RemainingDaysData } from '../services/assignmentService';
 
 export default function Assignment() {
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [selectedAssignment, setSelectedAssignment] = useState<Assignment | null>(null);
   const [editingAssignment, setEditingAssignment] = useState<UpdateAssignmentData | null>(null);
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [showRemainingDays, setShowRemainingDays] = useState(false);
+  const [remainingDaysData, setRemainingDaysData] = useState<RemainingDaysData[]>([]);
   const [newAssignment, setNewAssignment] = useState<CreateAssignmentData>({ 
     patientId: 0, 
     medicationId: 0, 
@@ -20,6 +22,7 @@ export default function Assignment() {
   const [saving, setSaving] = useState(false);
   const [creating, setCreating] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [remainingDaysLoading, setRemainingDaysLoading] = useState(false);
 
   useEffect(() => {
     const fetchAssignments = async () => {
@@ -57,6 +60,20 @@ export default function Assignment() {
     }
   };
 
+  const handleRemainingDays = async () => {
+    try {
+      setRemainingDaysLoading(true);
+      setError(null);
+      const data = await assignmentService.getRemainingDays();
+      setRemainingDaysData(data);
+      setShowRemainingDays(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to fetch remaining days');
+    } finally {
+      setRemainingDaysLoading(false);
+    }
+  };
+
   const handleSave = async () => {
     if (!selectedAssignment || !editingAssignment) return;
 
@@ -75,6 +92,16 @@ export default function Assignment() {
           assignment.id === selectedAssignment.id ? updatedAssignment : assignment
         )
       );
+      
+      // Refresh remaining days data if it's currently shown
+      if (showRemainingDays) {
+        try {
+          const remainingDaysData = await assignmentService.getRemainingDays();
+          setRemainingDaysData(remainingDaysData);
+        } catch (err) {
+          console.error('Failed to refresh remaining days data:', err);
+        }
+      }
       
       // Show success message (you could add a toast notification here)
       alert('Assignment updated successfully!');
@@ -107,6 +134,16 @@ export default function Assignment() {
       setSelectedAssignment(null);
       setEditingAssignment(null);
       
+      // Refresh remaining days data if it's currently shown
+      if (showRemainingDays) {
+        try {
+          const remainingDaysData = await assignmentService.getRemainingDays();
+          setRemainingDaysData(remainingDaysData);
+        } catch (err) {
+          console.error('Failed to refresh remaining days data:', err);
+        }
+      }
+      
       // Show success message
       alert('Assignment deleted successfully!');
       
@@ -135,6 +172,16 @@ export default function Assignment() {
       // Reset form
       setNewAssignment({ patientId: 0, medicationId: 0, startDate: '', numberOfDays: 0 });
       setShowCreateForm(false);
+      
+      // Refresh remaining days data if it's currently shown
+      if (showRemainingDays) {
+        try {
+          const remainingDaysData = await assignmentService.getRemainingDays();
+          setRemainingDaysData(remainingDaysData);
+        } catch (err) {
+          console.error('Failed to refresh remaining days data:', err);
+        }
+      }
       
       // Show success message
       alert('Assignment created successfully!');
@@ -184,13 +231,66 @@ export default function Assignment() {
     <div className="p-8">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Assignment Management</h1>
-        <button
-          onClick={() => setShowCreateForm(!showCreateForm)}
-          className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors cursor-pointer"
-        >
-          {showCreateForm ? 'Cancel' : 'Add New Assignment'}
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={handleRemainingDays}
+            disabled={remainingDaysLoading}
+            className="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
+          >
+            {remainingDaysLoading ? 'Loading...' : 'Remaining Days'}
+          </button>
+          <button
+            onClick={() => setShowCreateForm(!showCreateForm)}
+            className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors cursor-pointer"
+          >
+            {showCreateForm ? 'Cancel' : 'Add New Assignment'}
+          </button>
+        </div>
       </div>
+      
+      {/* Remaining Days Section */}
+      {showRemainingDays && (
+        <div className="bg-white shadow rounded-lg overflow-hidden mb-6">
+          <div className="px-6 py-4 bg-purple-50 border-b">
+            <div className="flex justify-between items-center">
+              <h2 className="text-lg font-semibold text-purple-800">Remaining Days</h2>
+              <button
+                onClick={() => setShowRemainingDays(false)}
+                className="text-purple-600 hover:text-purple-800 cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+          </div>
+          <div className="p-6">
+            {remainingDaysData.length === 0 ? (
+              <p className="text-gray-500">No remaining days data found.</p>
+            ) : (
+              <div className="space-y-4">
+                {remainingDaysData.map((item) => (
+                  <div key={item.assignment.id} className="border border-gray-200 rounded-lg p-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <h3 className="text-lg font-medium text-gray-900">Assignment #{item.assignment.id}</h3>
+                        <p className="text-sm text-gray-500">Patient ID: {item.assignment.patientId}</p>
+                        <p className="text-sm text-gray-500">Medication ID: {item.assignment.medicationId}</p>
+                        <p className="text-sm text-gray-500">Start Date: {formatDate(item.assignment.startDate)}</p>
+                        <p className="text-sm text-gray-500">Total Days: {item.assignment.numberOfDays}</p>
+                      </div>
+                      <div className="text-right">
+                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                          <p className="text-sm text-blue-600 font-medium">Remaining Days</p>
+                          <p className="text-2xl font-bold text-blue-800">{item.remainingDays}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
       
       {/* Create Assignment Form */}
       {showCreateForm && (
