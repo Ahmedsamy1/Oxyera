@@ -17,7 +17,7 @@ export interface CreateMedicationData {
   frequency: string;
 }
 
-const API_BASE_URL = 'http://localhost:8080';
+import { API_BASE_URL } from '../config/api';
 
 export const medicationService = {
   async getMedications(): Promise<Medication[]> {
