@@ -14,6 +14,7 @@ export default function Medication() {
   const [detailLoading, setDetailLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [creating, setCreating] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     const fetchMedications = async () => {
@@ -76,6 +77,37 @@ export default function Medication() {
       setError(err instanceof Error ? err.message : 'Failed to update medication');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!selectedMedication) return;
+
+    const confirmed = window.confirm(`Are you sure you want to delete medication "${selectedMedication.name}"? This action cannot be undone.`);
+    if (!confirmed) return;
+
+    try {
+      setDeleting(true);
+      setError(null);
+      
+      await medicationService.deleteMedication(selectedMedication.id);
+      
+      // Remove the medication from the list
+      setMedications(prevMedications => 
+        prevMedications.filter(medication => medication.id !== selectedMedication.id)
+      );
+      
+      // Close the detail view
+      setSelectedMedication(null);
+      setEditingMedication(null);
+      
+      // Show success message
+      alert('Medication deleted successfully!');
+      
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to delete medication');
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -302,9 +334,16 @@ export default function Medication() {
                         {saving ? 'Saving...' : 'Save Changes'}
                       </button>
                       <button 
-                        onClick={() => setSelectedMedication(null)}
-                        disabled={saving}
+                        onClick={handleDelete}
+                        disabled={saving || deleting}
                         className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                      >
+                        {deleting ? 'Deleting...' : 'Delete Medication'}
+                      </button>
+                      <button 
+                        onClick={() => setSelectedMedication(null)}
+                        disabled={saving || deleting}
+                        className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
                       >
                         Close
                       </button>

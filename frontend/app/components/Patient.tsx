@@ -14,6 +14,7 @@ export default function Patient() {
   const [detailLoading, setDetailLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [creating, setCreating] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     const fetchPatients = async () => {
@@ -75,6 +76,37 @@ export default function Patient() {
       setError(err instanceof Error ? err.message : 'Failed to update patient');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!selectedPatient) return;
+
+    const confirmed = window.confirm(`Are you sure you want to delete patient "${selectedPatient.name}"? This action cannot be undone.`);
+    if (!confirmed) return;
+
+    try {
+      setDeleting(true);
+      setError(null);
+      
+      await patientService.deletePatient(selectedPatient.id);
+      
+      // Remove the patient from the list
+      setPatients(prevPatients => 
+        prevPatients.filter(patient => patient.id !== selectedPatient.id)
+      );
+      
+      // Close the detail view
+      setSelectedPatient(null);
+      setEditingPatient(null);
+      
+      // Show success message
+      alert('Patient deleted successfully!');
+      
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to delete patient');
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -283,9 +315,16 @@ export default function Patient() {
                         {saving ? 'Saving...' : 'Save Changes'}
                       </button>
                       <button 
-                        onClick={() => setSelectedPatient(null)}
-                        disabled={saving}
+                        onClick={handleDelete}
+                        disabled={saving || deleting}
                         className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                      >
+                        {deleting ? 'Deleting...' : 'Delete Patient'}
+                      </button>
+                      <button 
+                        onClick={() => setSelectedPatient(null)}
+                        disabled={saving || deleting}
+                        className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
                       >
                         Close
                       </button>

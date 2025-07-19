@@ -91,5 +91,20 @@ export const patientService = {
       console.error(`Error updating patient ${id}:`, error);
       throw error;
     }
+  },
+
+  async deletePatient(id: number): Promise<void> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/patient/${id}`, {
+        method: 'DELETE',
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+    } catch (error) {
+      console.error(`Error deleting patient ${id}:`, error);
+      throw error;
+    }
   }
 }; 

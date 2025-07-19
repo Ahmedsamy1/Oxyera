@@ -94,5 +94,20 @@ export const medicationService = {
       console.error(`Error updating medication ${id}:`, error);
       throw error;
     }
+  },
+
+  async deleteMedication(id: number): Promise<void> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/medication/${id}`, {
+        method: 'DELETE',
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+    } catch (error) {
+      console.error(`Error deleting medication ${id}:`, error);
+      throw error;
+    }
   }
 }; 
